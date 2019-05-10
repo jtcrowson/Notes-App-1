@@ -3,9 +3,133 @@
 ## Initial Project and Storyboard Setup
 
 * New Project -> Single View App -> Choose Swift
-* When you create a new project, Xcode provides a default `ViewController.swift` file. Start by renaming `ViewController.swift` to `DetailViewController.swift`
-  * Click on the `ViewController.swift` file from the **Identity Inspector (⌥⌘3)**, highlight `ViewController` in the source code, then right click -> Refactor -> Rename
-* Head over to `Main.storyboard` and drag a `Table View Controller` object onto the Storyboard.
+* When you create a new project, Xcode provides a default `ViewController.swift` file.
+* Head over to `Main.storyboard` and drag and drop a `Text Field`, `Button`, and `Activity Indicator View` from the **Object Library (⇧⌘L)** onto view in the Storyboard.
+* Change the button text to "Submit", and the Text Field placeholder text to "Account ID".
+
+## Configuring the ViewController
+
+* Connect the **Text Field** as an `IBOutlet` to the `ViewController`
+  * Make sure you **Show the Assistant Editor** so you can see the Storyboard and `ViewController.swift` class side by side
+    > **PRO TIP:** You can hold `Option + Shift` then click on a file to give you different presentation options
+  * Create the outlet by control clicking and dragging from the **Text Field** onto `ViewController.swift`
+  * Make sure **Outlet** is selected in the popup and give it the name: `accountIdTextField`
+  * Once this is done, the `@IBOutlet` inside `ViewController.swift` should look something like this:
+    ```swift
+    @IBOutlet weak var accountIdTextField: UITextField!
+    ```
+* Follow the same steps to connect the **Activity Indicator View** to `ViewController.swift`, naming the outlet `activityIndicator`.
+* Connect the **Button** as an `IBAction` to the `ViewController`
+  * Create the action by control clicking and dragging from the **Button** onto `ViewController.swift`
+  * Make sure **Action** is selected in the popup and give it the name: `submitTapped`
+  * Once this is done, the `@IBAction` inside `ViewController.swift` should look something like this:
+    ```swift
+    @IBAction func submitTapped(_ sender: Any) {
+    }
+    ```
+* Hide the activity indicator on `viewDidLoad` and show and animate it on `submitTapped`.
+* **ADD THE CODE FOR API CALL, HIDE ON FINISH.**
+
+## Configuring TransactionsTableViewController
+
+### A few notes on `UITableViewController`
+
+When you subclass `UITableViewController` it brings in a lot of pre-wired functionality. The `UITableViewController` subclass creates a `UITableView` and also sets itself as the delegate and data source of the table view. If you were to create a `UIViewController` that has a table view and does not inherit from `UITableViewController` you would have to set up the data source and the delegate of your table view yourself.
+
+`UITableView` declares two protocols: `UITableViewDataSource` and `UITableViewDelegate`. The delegate protocol is used to inform the class about cells that have been selected and to provide an interface for modifying the table view behavior. The data source protocol is used by the table view to determine the content it needs to display. The delegate is there to respond to events from and guide the behavior of the table view, and the data source is there to provide data rather than control it.
+
+In other words, `UITableViewController` comes with boilerplate code ready for you to use and also comes pre-wired to implement the `UITableViewDataSource` and `UITableViewDelegate` protocols.
+
+### Creating the Model?
+
+### Implement the `UITableView` protocols
+
+* Find the `numberOfSections()` table view data source function and change the return value to: `1`
+
+  ```swift
+  return 1
+  ```
+
+  * Note that `numberOfSections()` is an **Optional** function
+* Find the `tableView(numberOfRowsInSection)` table view data source function and change it to return the count of `transactions`:
+
+  ```swift
+  return transactions.count
+  ```
+
+  * Note that `tableView(numberOfRowsInSection)` is a **Required** function
+* Uncomment the `tableView(cellForRowAt indexPath)` function
+* In `Main.storyboard` find the "Table View Cell" in the Transactions Table View Controller scene.  Use the "Subtitle" option from the Table View Cell "Style" dropdown. Inside the **Attributes Inspector (⌥⌘4)** give the table cell the reuse identifier: `transactionCell`
+
+  > **PRO TIP:** Use the **Document Outline** sidebar section to easily highlight different UI components
+
+  ![Table View Cell](/Assets/MarkdownAssets/TableViewCell.png) ![Table View Cell Identifier](/Assets/MarkdownAssets/TableViewCellIdentifier.png)
+
+* Back in `TransactionsTableViewController.swift` create a `String` constant for the identifier and use it with the `dequeuResuableCell()` function inside of the `tableView(cellForRowAt indexPath)` function
+  * Under the `notes` array add the following:
+
+    ```swift
+    let transactionCellIdentifier = "transactionCell"
+    ```
+
+  * In the `cellForRowAt` function:
+
+    ```swift
+    let cell = tableView.dequeueReusableCell(withIdentifier: transactionCellIdentifier, for: indexPath)
+    ```
+
+* Under "Configure the cell" comment inside the `tableView(cellForRowAt indexPath)` function, set the `textLabel` property of each table view cell equal to the `content` of your `notes` model using the appropriate index.
+  * You can use `indexPath.row` to give you the row or index the cell is on
+
+  ```swift
+  cell.textLabel?.text = notes[indexPath.row].content
+  return cell
+  ```
+
+* Build and run the app **(⌘R)**. You should see 2 cells displayed with whatever content you populated the Notes array with.
+
+## App Navigation: Creating a Segue
+
+A *segue* defines a transition between two view controllers in your app’s storyboard file. We will use segue's to transition from our `MasterViewController` to our `DetailViewController` whenever a user clicks on a tableView cell or wants to add a new note.
+
+Segue's also provide a way to pass data from one controller to the next. In our case, we will use the segue to pass the appropriate `Note` from the `MasteViewController` to the `DetailViewController`.
+
+* In `Main.storyboard` create a segue from the `MasterViewController` tableView cell to `DetailViewController`.
+  > **PRO TIP:** Use the **Document Outline** sidebar section to easily highlight different UI components
+  * Control + Drag from the `noteCell` component to the `DetailViewController` scene
+  * Select `Show` in the popup to create a segue of type `Show`
+  * Click on the new segue in the storyboard then on **Attributes Inspector**. Give it the Identifier name: `showNote`
+* In `MasterViewController.swift` create a `String` constant to match the Identifier
+
+  ```swift
+  let showNoteSegue = "showNote"
+  ```
+
+* Uncomment the `prepare(for segue)` code towards the bottom of `MasterViewController.swift`
+* Run the app to test out your segue functionality
+
+## App Navigation: Creating a Segue
+
+A *segue* defines a transition between two view controllers in your app’s storyboard file. We will use segue's to transition from our `ViewController` to our `DetailViewController` whenever a user clicks on a tableView cell or wants to add a new note.
+
+Segue's also provide a way to pass data from one controller to the next. In our case, we will use the segue to pass the appropriate `Note` from the `MasteViewController` to the `DetailViewController`.
+
+* In `Main.storyboard` create a segue from the `MasterViewController` tableView cell to `DetailViewController`.
+  > **PRO TIP:** Use the **Document Outline** sidebar section to easily highlight different UI components
+  * Control + Drag from the `noteCell` component to the `DetailViewController` scene
+  * Select `Show` in the popup to create a segue of type `Show`
+  * Click on the new segue in the storyboard then on **Attributes Inspector**. Give it the Identifier name: `showNote`
+* In `MasterViewController.swift` create a `String` constant to match the Identifier
+
+  ```swift
+  let showNoteSegue = "showNote"
+  ```
+
+* Uncomment the `prepare(for segue)` code towards the bottom of `MasterViewController.swift`
+* Run the app to test out your segue functionality
+
+* Add a variable to `DetailViewController.swift` which will be used to hold your `Note`:
+
   * Click on the **Object Library (⇧⌘L)** and drag it onto `Main.storyboard`.
 * Click the newly created `Table View Controller` then in the Xcode dropdown menu's go to Editor -> Embed In -> Navigation Controller.
   > A navigation controller is a container view controller that manages one or more child view controllers in a navigation interface. They allow us to move between different view controller scenes by adding or popping view controllers from a stack.
